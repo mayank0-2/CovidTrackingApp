@@ -11,6 +11,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var perStatesDailyData: Map<String, List<CovidData>>
@@ -42,6 +45,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 nationalDailyData = nationalData.reversed()
                 Log.i(Tag,"Updated graph with national data")
+                //TOdo : Update graph with national data
+                updateDisplyaWithData(nationalDailyData)
 
 
             }
@@ -71,5 +76,23 @@ class MainActivity : AppCompatActivity() {
                 Log.i(Tag, "OnFailure $t")
             }
         })
+    }
+
+    private fun updateDisplyaWithData(dailyData: List<CovidData>) {
+        //Create spark adapter with the data
+
+        // Set default radio buttons
+
+        radioButtonMax.isChecked = true
+        radioButtonPositive.isChecked = true
+        // Display metric for recent date
+        updateInfoDate(dailyData.last())
+
+    }
+
+    private fun updateInfoDate(covidData: CovidData) {
+        tvMetricLabel.text = NumberFormat.getInstance().format(covidData.positiveIncrease)
+        val outputDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+        tvDateLabel.text = outputDateFormat.format(covidData.dateChecked)
     }
 }
