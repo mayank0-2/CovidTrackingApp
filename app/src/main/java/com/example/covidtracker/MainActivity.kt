@@ -3,9 +3,9 @@ package com.example.covidtracker
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import com.example.covidtracker.databinding.ActivityMainBinding
 import com.google.gson.GsonBuilder
-import com.google.gson.internal.GsonBuildConfig
-import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -14,85 +14,104 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
+
+private const val url = "https://covidtracking.com/api/v1/"
+private const val tag = "Main activity"
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var perStatesDailyData: Map<String, List<CovidData>>
+    private lateinit var perStatesDailyData: Map<String,List<CovidData>>
     private lateinit var nationalDailyData: List<CovidData>
-    val url = "https://api.covidtracking.com"
-    val Tag = "Main activity"
+
+    private lateinit var binding : ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
-        val gson = GsonBuilder().setDateFormat("yyyy-MM-dd 'T' HH:mm:ss").create()
+        val gson = GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create()
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(1,TimeUnit.MINUTES)
+            .readTimeout(1,TimeUnit.MINUTES)
+            .writeTimeout(1,TimeUnit.MINUTES)
+            .build();
+
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
-        val CovidService = retrofit.create(CovidService :: class.java)
+        val covidService = retrofit.create(CovidService :: class.java)
 
         // fetch national data
-        CovidService.getNationalData().enqueue(object : Callback<List<CovidData>> {
+        covidService.getNationalData().enqueue(object : Callback<List<CovidData>> {
+
+            override fun onFailure(call: Call<List<CovidData>>, t: Throwable) {
+                Log.e(tag,"OnFailure $t")
+            }
+
             override fun onResponse(
                 call: Call<List<CovidData>>,
                 response: Response<List<CovidData>>
             ) {
                 val nationalData = response.body()
                 if (nationalData == null) {
-                    Log.w(Tag,"Did not recieve data from the api")
+                    Log.w(tag,"Did not recieve data from the api")
                     return
                 }
                 nationalDailyData = nationalData.reversed()
-                Log.i(Tag,"Updated graph with national data")
+                Log.i(tag,"Updated graph with national data")
                 //TOdo : Update graph with national data
-                updateDisplyaWithData(nationalDailyData)
+                updateDisplayWithData(nationalDailyData)
 
 
             }
 
-            override fun onFailure(call: Call<List<CovidData>>, t: Throwable) {
-                Log.e(Tag,"OnFailure $t")
-            }
         })
 
         //fetching states data
-        CovidService.getStatesData().enqueue(object : Callback<List<CovidData>> {
+        covidService.getStatesData().enqueue(object : Callback<List<CovidData>> {
+            override fun onFailure(call: Call<List<CovidData>>, t: Throwable) {
+                Log.i(tag, "OnFailure $t")
+            }
             override fun onResponse(
                 call: Call<List<CovidData>>,
                 response: Response<List<CovidData>>
             ) {
                 val statesData = response.body()
                 if (statesData == null) {
-                    Log.e(Tag,"No states data recieved form api")
+                    Log.e(tag,"No states data recieved form api")
                     return
                 }
                 perStatesDailyData = statesData.reversed().groupBy { it.state }
-                Log.i(Tag,"update graph with states data")
+                Log.i(tag,"update graph with states data")
                 //TODO : update spiner with states names
             }
 
-            override fun onFailure(call: Call<List<CovidData>>, t: Throwable) {
-                Log.i(Tag, "OnFailure $t")
-            }
+
         })
+     }
+
+    private fun updateDisplayWithData(dailyData: List<CovidData>) {
+        //Todo : Create spark adapter with the data
+
+        // Todo : Set default radio buttons
+
+        binding.radioButtonMax.isChecked = true
+        binding.radioButtonPositive.isChecked = true
+
+
+        // Todo : Display metric for recent date
+        updateInfoForDate(dailyData.last())
+
     }
 
-    private fun updateDisplyaWithData(dailyData: List<CovidData>) {
-        //Create spark adapter with the data
-
-        // Set default radio buttons
-
-        radioButtonMax.isChecked = true
-        radioButtonPositive.isChecked = true
-        // Display metric for recent date
-        updateInfoDate(dailyData.last())
-
-    }
-
-    private fun updateInfoDate(covidData: CovidData) {
-        tvMetricLabel.text = NumberFormat.getInstance().format(covidData.positiveIncrease)
+    private fun updateInfoForDate(covidData: CovidData) {
+        binding.tvMetricLabel.text = NumberFormat.getInstance().format(covidData.positiveIncrease)
         val outputDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
-        tvDateLabel.text = outputDateFormat.format(covidData.dateChecked)
+        binding.tvDateLabel.text = outputDateFormat.format(covidData.dateChecked)
     }
 }
