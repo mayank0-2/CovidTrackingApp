@@ -1,8 +1,8 @@
 package com.example.covidtracker
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import com.example.covidtracker.databinding.ActivityMainBinding
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
             .connectTimeout(1,TimeUnit.MINUTES)
             .readTimeout(1,TimeUnit.MINUTES)
             .writeTimeout(1,TimeUnit.MINUTES)
-            .build();
+            .build()
 
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
@@ -97,7 +97,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateDisplayWithData(dailyData: List<CovidData>) {
         //Todo : Create spark adapter with the data
-
+        val adapter = CovidSparkAdapter(dailyData)
+        binding.sparkView.adapter = adapter
         // Todo : Set default radio buttons
 
         binding.radioButtonMax.isChecked = true
