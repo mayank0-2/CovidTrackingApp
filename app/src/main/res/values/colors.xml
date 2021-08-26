@@ -11,4 +11,6 @@
     <color name = "colorNegative">#008911</color>
     <color name = "colorPositive">#FF7B00</color>
     <color name = "colorDeath"> #A9002B</color>
+    <color name="backgroundShade">#EBEEF6</color>
+    <color name="colorSelectedBackground">#8C8D91</color>
 </resources>

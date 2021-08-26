@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.covidtracker.databinding.ActivityMainBinding
 import com.google.gson.GsonBuilder
+import com.robinhood.ticker.TickerUtils
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -117,6 +118,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpEventListeners() {
+        binding.tickerView.setCharacterLists(TickerUtils.provideNumberList())
+
         // Add a listner
         binding.sparkView.isScrubEnabled = true
         binding.sparkView.setScrubListener { itemData ->
@@ -152,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         }
         @ColorInt val colorInt = ContextCompat.getColor(this, colorRes)
         binding.sparkView.lineColor = colorInt
-        binding.tvMetricLabel.setTextColor(colorInt)
+        binding.tickerView.setTextColor(colorInt)
         adapter.metric = metric
         adapter.notifyDataSetChanged()
 
@@ -182,7 +185,7 @@ class MainActivity : AppCompatActivity() {
             Metric.POSITIVE -> covidData.positiveIncrease
             Metric.DEATH -> covidData.deathIncrease
         }
-        binding.tvMetricLabel.text = NumberFormat.getInstance().format(numCases)
+        binding.tickerView.text = NumberFormat.getInstance().format(numCases)
         val outputDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
         binding.tvDateLabel.text = outputDateFormat.format(covidData.dateChecked)
     }
